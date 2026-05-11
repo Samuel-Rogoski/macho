@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Cookie Clicker Turbo - Clique Rápido!</title>
+    <style>
+        * {
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: linear-gradient(145deg, #2b1a0f 0%, #3e2a1a 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', 'Poppins', system-ui, -apple-system, 'Inter', sans-serif;
+        }
+
+        /* Container principal estilo arcade */
+        .game-container {
+            background: rgba(0, 0, 0, 0.35);
+            border-radius: 80px;
+            padding: 25px 35px 40px 35px;
+            backdrop-filter: blur(4px);
+            box-shadow: 0 20px 35px rgba(0,0,0,0.5), inset 0 1px 2px rgba(255,255,255,0.2);
+        }
+
+        .game-panel {
+            background: #fef7e0;
+            border-radius: 64px;
+            padding: 20px 30px 30px 30px;
+            box-shadow: inset 0 0 0 2px #fff9e8, 0 15px 25px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+
+        /* placar principal */
+        .score-area {
+            background: #2c1a0c;
+            border-radius: 60px;
+            padding: 12px 25px;
+            margin-bottom: 25px;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.5), 0 5px 0 #5a3a24;
+        }
+        .score-label {
+            color: #ffd78c;
+            font-weight: bold;
+            letter-spacing: 2px;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+        }
+        .score-value {
+            font-size: 4.2rem;
+            font-weight: 800;
+            color: #ffd966;
+            text-shadow: 0 3px 0 #6b3e1c;
+            line-height: 1;
+            font-family: monospace;
+            letter-spacing: 4px;
+        }
+
+        /* combo & bonus */
+        .combo-area {
+            background: #3e2a25b3;
+            border-radius: 50px;
+            margin: 10px 0 20px;
+            padding: 8px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 15px;
+            backdrop-filter: blur(8px);
+        }
+        .combo-box, .multiplier-box {
+            background: #1e130b;
+            border-radius: 40px;
+            padding: 6px 16px;
+            flex: 1;
+        }
+        .combo-label, .mult-label {
+            font-size: 0.75rem;
+            font-weight: bold;
+            color: #e9bc7d;
+            letter-spacing: 1px;
+        }
+        .combo-count, .mult-value {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #f5b642;
+            text-shadow: 0 2px 0 #482810;
+            line-height: 1;
+        }
+        
+        /* O GRANDE COOKIE CLICÁVEL */
+        .cookie-wrapper {
+            margin: 20px auto;
+            cursor: pointer;
+            transition: transform 0.05s ease-out;
+            display: inline-block;
+            filter: drop-shadow(0 14px 18px rgba(0,0,0,0.4));
+        }
+        .cookie-svg {
+            display: block;
+            width: 240px;
+            height: 240px;
+            transition: all 0.07s cubic-bezier(0.2, 1.6, 0.4, 1);
+        }
+        .cookie-wrapper:active .cookie-svg {
+            transform: scale(0.92);
+            filter: brightness(0.96) drop-shadow(0 5px 8px rgba(0,0,0,0.3));
+        }
+        
+        /* efeito de +pontos flutuante */
+        .floating-points {
+            position: fixed;
+            pointer-events: none;
+            font-weight: 800;
+            font-size: 1.7rem;
+            font-family: monospace;
+            color: #ffaa33;
+            text-shadow: 0 0 5px #ff7b00, 0 0 2px black;
+            z-index: 1000;
+            animation: floatUp 0.6s ease-out forwards;
+        }
+        
+        @keyframes floatUp {
+            0% {
+                opacity: 1;
+                transform: translateY(0px) scale(0.9);
+            }
+            70% {
+                opacity: 0.9;
+                transform: translateY(-55px) scale(1.2);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-100px) scale(1.5);
+            }
+        }
+
+        /* barra de velocidade / stamina */
+        .speed-bar-container {
+            background: #4f3420;
+            border-radius: 30px;
+            height: 16px;
+            width: 100%;
+            margin: 20px 0 15px;
+            overflow: hidden;
+            box-shadow: inset 0 1px 4px rgba(0,0,0,0.6);
+        }
+        .speed-fill {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #f7971e, #ffd200);
+            border-radius: 30px;
+            transition: width 0.08s linear;
+            box-shadow: 0 0 5px #ffbb33;
+        }
+        .speed-tip {
+            font-size: 0.7rem;
+            color: #ead2a3;
+            margin-top: 5px;
+            font-weight: bold;
+        }
+        
+        button {
+            background: #ffbc6e;
+            border: none;
+            font-weight: bold;
+            font-size: 1rem;
+            padding: 8px 25px;
+            border-radius: 60px;
+            color: #2a1a0c;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: 0.1s linear;
+            font-family: inherit;
+            box-shadow: 0 4px 0 #9b5e2c;
+        }
+        button:active {
+            transform: translateY(2px);
+            box-shadow: 0 1px 0 #9b5e2c;
+        }
+
+        .record {
+            font-size: 0.8rem;
+            background: #d9bd8a50;
+            border-radius: 30px;
+            padding: 6px 12px;
+            margin-top: 15px;
+            display: inline-block;
+            color: #ffefcf;
+        }
+        
+        @media (max-width: 550px) {
+            .cookie-svg { width: 180px; height: 180px; }
+            .score-value { font-size: 2.8rem; }
+            .combo-count, .mult-value { font-size: 1.4rem; }
+            .game-panel { padding: 15px 20px 20px; }
+        }
+        
+        footer {
+            font-size: 0.65rem;
+            text-align: center;
+            margin-top: 10px;
+            color: #e9cca6;
+        }
+    </style>
+</head>
+<body>
+<div class="game-container">
+    <div class="game-panel">
+        <div class="score-area">
+            <div class="score-label">🍪 COOKIES 🍪</div>
+            <div class="score-value" id="scoreDisplay">0</div>
+        </div>
+        
+        <div class="combo-area">
+            <div class="combo-box">
+                <div class="combo-label">⚡ COMBO ⚡</div>
+                <div class="combo-count" id="comboCount">0x</div>
+            </div>
+            <div class="multiplier-box">
+                <div class="mult-label">✨ MULTIPLICADOR ✨</div>
+                <div class="mult-value" id="multiplierValue">1.00x</div>
+            </div>
+        </div>
+        
+        <!-- O GRANDE COOKIE NO CENTRO -->
+        <div class="cookie-wrapper" id="cookieClicker">
+            <svg class="cookie-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="50" cy="50" r="45" fill="#D2A24D" stroke="#A66A2A" stroke-width="2.5"/>
+                <circle cx="50" cy="50" r="38" fill="#E4B363" stroke="#C58B3A" stroke-width="1.8"/>
+                <!-- chips de chocolate -->
+                <circle cx="34" cy="38" r="5" fill="#4B2F14"/>
+                <circle cx="62" cy="32" r="4.5" fill="#3E2610"/>
+                <circle cx="70" cy="55" r="5" fill="#4B2F14"/>
+                <circle cx="44" cy="68" r="5.5" fill="#3E2610"/>
+                <circle cx="27" cy="60" r="4" fill="#4B2F14"/>
+                <circle cx="55" cy="55" r="3.8" fill="#5C3A1A"/>
+                <circle cx="48" cy="44" r="3.2" fill="#5A3715"/>
+                <circle cx="68" cy="74" r="4" fill="#4F2E12"/>
+                <circle cx="32" cy="72" r="3.5" fill="#462A10"/>
+                <!-- detalhe brilho -->
+                <ellipse cx="45" cy="35" rx="6" ry="3" fill="#FFECB3" opacity="0.7" transform="rotate(-25 45 35)"/>
+            </svg>
+        </div>
+
+        <div class="speed-bar-container">
+            <div class="speed-fill" id="speedFill"></div>
+        </div>
+        <div class="speed-tip">🔥 clique mais rápido → mais pontos por clique + aumenta multiplicador!</div>
+        
+        <button id="resetBtn">🍪 REINICIAR FORNADA 🍪</button>
+        <div class="record">
+            🏆 Melhor combo: <span id="bestComboSpan">0</span>x
+        </div>
+        <footer>cliques rápidos aumentam o multiplicador! queda de combo se demorar >1.2s</footer>
+    </div>
+</div>
+
+<script>
+    (function(){
+        // ------------------- ELEMENTOS ------------------
+        const scoreDisplay = document.getElementById('scoreDisplay');
+        const comboCountSpan = document.getElementById('comboCount');
+        const multiplierSpan = document.getElementById('multiplierValue');
+        const speedFillDiv = document.getElementById('speedFill');
+        const bestComboSpan = document.getElementById('bestComboSpan');
+        const cookieDiv = document.getElementById('cookieClicker');
+        
+        // ------------------- ESTADO DO JOGO -------------
+        let totalPoints = 0;              // pontos totais (float, mas exibimos inteiro)
+        let currentCombo = 0;             // combo atual (quantidade de cliques em sequência rápida)
+        let bestCombo = 0;                // recorde de combo
+        let currentMultiplier = 1.0;       // multiplicador gerado pela velocidade (entre 1.0 e máximo)
+        
+        // Variáveis de tempo para controle de ritmo
+        let lastClickTimestamp = 0;        // timestamp do último clique (performance.now)
+        let decayIntervalId = null;        // intervalo que reduz combo/multiplicador se ficar sem clique
+        
+        // Configurações de sensibilidade
+        const COMBO_WINDOW_MS = 1200;       // janela máxima entre cliques para manter combo (1.2s)
+        const BASE_POINTS = 1;               // pontos base (sem multiplicador)
+        const MAX_MULTIPLIER = 5.0;          // multiplicador máximo ao clicar extremamente rápido
+        const TARGET_RAPID_MS = 80;          // clique em 80ms ou menos = multiplicador máximo (5.0x)
+        // Quanto menor o intervalo entre cliques, maior o multiplicador (escala linear entre 1.0 e MAX_MULTIPLIER)
+        // Se intervalo >= COMBO_WINDOW_MS -> multiplicador volta pra 1.0 e combo reseta.
+        
+        // Estado de pedido de atualização visual
+        let animationFrameScheduled = false;
+        
+        // ------------------- FUNÇÕES DE CÁLCULO -------------
+        // Calcula multiplicador a partir do intervalo entre cliques (em ms)
+        function computeMultiplierFromInterval(intervalMs) {
+            if (intervalMs >= COMBO_WINDOW_MS) return 1.0;
+            if (intervalMs <= TARGET_RAPID_MS) return MAX_MULTIPLIER;
+            // Interpolação linear: quanto menor o intervalo, maior o multiplicador
+            // range: [TARGET_RAPID_MS ... COMBO_WINDOW_MS] -> [MAX_MULTIPLIER ... 1.0]
+            const t = (intervalMs - TARGET_RAPID_MS) / (COMBO_WINDOW_MS - TARGET_RAPID_MS);
+            const multiplier = MAX_MULTIPLIER - t * (MAX_MULTIPLIER - 1.0);
+            return Math.min(MAX_MULTIPLIER, Math.max(1.0, multiplier));
+        }
+        
+        // Atualiza barra de "velocidade" de forma intuitiva (preenchimento proporcional ao multiplicador)
+        function updateSpeedBar() {
+            let percent = ((currentMultiplier - 1.0) / (MAX_MULTIPLIER - 1.0)) * 100;
+            percent = Math.min(100, Math.max(0, percent));
+            speedFillDiv.style.width = percent + "%";
+            if (currentMultiplier >= MAX_MULTIPLIER - 0.05) {
+                speedFillDiv.style.background = "linear-gradient(90deg, #ff8800, #ffcc44, #ffee99)";
+                speedFillDiv.style.boxShadow = "0 0 8px #ffc107";
+            } else {
+                speedFillDiv.style.background = "linear-gradient(90deg, #f7971e, #ffd200)";
+                speedFillDiv.style.boxShadow = "none";
+            }
+        }
+        
+        // Atualiza os textos de UI: placar, combo, multiplicador
+        function updateUI() {
+            scoreDisplay.innerText = Math.floor(totalPoints); // exibe inteiro
+            comboCountSpan.innerText = currentCombo + "x";
+            // Multiplicador formatado com 2 casas
+            multiplierSpan.innerText = currentMultiplier.toFixed(2) + "x";
+            updateSpeedBar();
+            if (currentCombo > bestCombo) {
+                bestCombo = currentCombo;
+                bestComboSpan.innerText = bestCombo;
+            }
+        }
+        
+        // Função que aplica a lógica de decadência (quando o jogador para de clicar)
+        // Durante a decadência, reduzimos combo e multiplicador gradualmente.
+        function startDecayTimer() {
+            if (decayIntervalId) clearInterval(decayIntervalId);
+            // a cada 0.6s, reduzimos combo e multiplicador se não houve clique recente
+            decayIntervalId = setInterval(() => {
+                // verifica o tempo desde o último clique
+                const now = performance.now();
+                const elapsed = now - lastClickTimestamp;
+                // Se não houver clique por mais de 1.5x a janela -> aplica decadência forte
+                if (elapsed > COMBO_WINDOW_MS * 1.2) {
+                    // reseta combo e multiplicador lentamente em etapas
+                    if (currentCombo > 0 || currentMultiplier > 1.0) {
+                        // reduz combo em degraus, mas não zera de uma vez? mais suave:
+                        let newCombo = Math.max(0, currentCombo - Math.ceil(currentCombo * 0.25) - 1);
+                        if (newCombo < 0) newCombo = 0;
+                        currentCombo = newCombo;
+                        // multiplicador também cai
+                        let newMulti = Math.max(1.0, currentMultiplier - 0.25);
+                        currentMultiplier = parseFloat(newMulti.toFixed(4));
+                        if (currentCombo === 0 && currentMultiplier <= 1.0) {
+                            currentMultiplier = 1.0;
+                        }
+                        // se combo zerar e multiplicador já 1.0, paramos de forçar queda
+                        updateUI();
+                    }
+                }
+                else if (elapsed > COMBO_WINDOW_MS * 0.85 && currentCombo > 0) {
+                    // leve penalidade se estiver próximo de perder combo
+                    if (currentCombo > 0 && currentMultiplier > 1.0) {
+                        currentMultiplier = Math.max(1.0, currentMultiplier - 0.08);
+                        if(currentMultiplier <= 1.01 && currentCombo > 0) {
+                            // não forçamos zerar combo completamente de uma vez
+                        }
+                        updateUI();
+                    }
+                }
+                // por segurança se o multiplicador for muito alto em idle e combo zero, ajeitamos
+                if (currentCombo === 0 && currentMultiplier > 1.01) {
+                    currentMultiplier = Math.max(1.0, currentMultiplier - 0.1);
+                    updateUI();
+                }
+                if (currentMultiplier <= 1.0 && currentCombo === 0) {
+                    currentMultiplier = 1.0;
+                    if(decayIntervalId) {
+                        // se tudo estabilizou, podemos cancelar timer após algum tempo? mas deixa ativo com leve verificação
+                    }
+                }
+                // se combo zerou e multiplier ~1, não precisa mais reduzir agressivamente
+                if (currentCombo === 0 && currentMultiplier === 1.0 && elapsed > COMBO_WINDOW_MS * 2) {
+                    // não faz nada extra, pode manter intervalo.
+                }
+                updateUI();
+            }, 550);
+        }
+        
+        // Reseta o timer de decadência sempre que clicamos (para evitar decair logo após cliques seguidos)
+        function resetDecayTimer() {
+            if (decayIntervalId) {
+                clearInterval(decayIntervalId);
+                startDecayTimer();
+            }
+        }
+        
+        // Principal: ação de clique no cookie
+        function handleCookieClick(event) {
+            // Pega tempo atual (alta resolução)
+            const now = performance.now();
+            let interval = 0;
+            if (lastClickTimestamp !== 0) {
+                interval = now - lastClickTimestamp;
+            } else {
+                interval = COMBO_WINDOW_MS + 10; // primeiro clique, sem combo, multiplicador base
+            }
+            
+            // Lógica de combo: se intervalo maior que janela, combo reseta e multiplicador volta 1.0
+            if (interval > COMBO_WINDOW_MS) {
+                currentCombo = 0;
+                currentMultiplier = 1.0;
+            } else {
+                // dentro da janela -> aumenta combo gradualmente (quanto mais rápido, maior ganho de combo)
+                // o combo aumenta baseado no quão rápido clicou, mas não pode explodir instantâneo
+                let comboIncrease = 1;
+                if (interval < 200) comboIncrease = 2;
+                if (interval < 100) comboIncrease = 3;
+                if (interval < 50) comboIncrease = 4;
+                currentCombo += comboIncrease;
+                // Multiplicador é derivado do intervalo atual
+                let newMultiplier = computeMultiplierFromInterval(interval);
+                // MAS também para dar ainda mais ênfase em "quanto mais rapido clicar, mais pontos"
+                // multiplicador é aplicado no ganho do clique. Se combo alto, mantém multiplicador alto com base no ritmo
+                currentMultiplier = newMultiplier;
+                // limitador combo máximo ? (opcional visual)
+                if (currentCombo > 999) currentCombo = 999;
+            }
+            
+            // Calcula pontos ganhos nesse clique: pontos base * multiplicador atual
+            // adicional: combo também dá um bônus sutil? conforme pedido: "quanto mais rápido clicar, mais pontos ganha"
+            // o multiplicador já reflete a velocidade instantânea, perfeito.
+            let pointsEarned = BASE_POINTS * currentMultiplier;
+            // Pontos ganhos podem ser flutuantes, mas vamos acumular e exibir sem decimais
+            totalPoints += pointsEarned;
+            
+            // Efeito visual flutuante com o valor do ganho (arredondado para 1 casa)
+            createFloatingPoints(event.clientX, event.clientY, pointsEarned.toFixed(1));
+            
+            // Atualiza timestamp do último clique
+            lastClickTimestamp = now;
+            
+            // Garante que combo não fique negativo
+            if (currentCombo < 0) currentCombo = 0;
+            if (currentMultiplier < 1.0) currentMultiplier = 1.0;
+            
+            // Atualiza toda interface
+            updateUI();
+            
+            // Reinicia o temporizador de decadência (o jogador está ativo)
+            resetDecayTimer();
+            
+            // Pequeno efeito de vibração no cookie (já feito via CSS active)
+        }
+        
+        // Cria números flutuantes na posição do clique (ou próximo ao cookie)
+        function createFloatingPoints(clientX, clientY, pointsText) {
+            // Se por algum motivo não tivermos coordenadas (touch), usamos referência do cookie
+            let x = clientX;
+            let y = clientY;
+            if (!x || !y) {
+                const rect = cookieDiv.getBoundingClientRect();
+                x = rect.left + rect.width/2;
+                y = rect.top + rect.height/3;
+            }
+            const span = document.createElement('div');
+            span.className = 'floating-points';
+            span.innerText = '+' + pointsText;
+            span.style.left = (x - 25) + 'px';
+            span.style.top = (y - 20) + 'px';
+            document.body.appendChild(span);
+            setTimeout(() => {
+                if(span && span.remove) span.remove();
+            }, 600);
+        }
+        
+        // Reiniciar jogo completamente
+        function resetGame() {
+            totalPoints = 0;
+            currentCombo = 0;
+            currentMultiplier = 1.0;
+            // mantem recorde bestCombo? O recorde deve ser resetado opcionalmente, mas vamos resetar apenas se o botão for reinício completo.
+            // Para melhor experiência, resetamos também o recorde se o usuário quiser? Vamos permitir reset do recorde sim (novo jogo limpo)
+            bestCombo = 0;
+            bestComboSpan.innerText = "0";
+            lastClickTimestamp = 0;
+            updateUI();
+            // reinicia timers de decadência limpando e recriando
+            if (decayIntervalId) {
+                clearInterval(decayIntervalId);
+                decayIntervalId = null;
+            }
+            startDecayTimer();
+        }
+        
+        // Adaptando eventos para clique e toque (mobile)
+        function attachEvents() {
+            // Evento de clique para mouse e também para touch (previnindo delay)
+            cookieDiv.addEventListener('click', (e) => {
+                e.preventDefault();
+                handleCookieClick(e);
+            });
+            // Para suporte mobile com toque, o 'click' já funciona, mas queremos coordenadas corretas no touch
+            cookieDiv.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                const touch = e.touches[0];
+                if (touch) {
+                    handleCookieClick({ clientX: touch.clientX, clientY: touch.clientY });
+                } else {
+                    handleCookieClick(e);
+                }
+            });
+        }
+        
+        // iniciar timers e eventos
+        function init() {
+            attachEvents();
+            startDecayTimer();
+            updateUI();
+            // garantir que o multiplicador de início é 1.0
+            currentMultiplier = 1.0;
+            currentCombo = 0;
+            bestCombo = 0;
+            totalPoints = 0;
+            lastClickTimestamp = 0;
+            updateUI();
+        }
+        
+        // botão reset
+        const resetBtn = document.getElementById('resetBtn');
+        resetBtn.addEventListener('click', () => {
+            resetGame();
+        });
+        
+        init();
+    })();
+</script>
+</body>
+</html>
